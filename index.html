@@ -43,7 +43,7 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: 0;
-            opacity: 0.6;
+            opacity: 0.8;
         }
 
         /* --- LAYOUT --- */
@@ -163,9 +163,10 @@
             position: relative;
             justify-content: center;
             align-items: center;
-            background: radial-gradient(circle at center, rgba(0, 240, 255, 0.05) 0%, transparent 70%);
+            background: radial-gradient(circle at center, rgba(0, 240, 255, 0.15) 0%, rgba(0, 240, 255, 0.05) 30%, transparent 70%);
             border: 1px solid var(--glass-border);
             overflow: hidden;
+            box-shadow: inset 0 0 50px rgba(0, 240, 255, 0.1);
         }
 
         .score-display {
@@ -200,9 +201,13 @@
             cursor: pointer;
             transition: transform 0.1s;
             z-index: 10;
+            filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.5));
         }
 
-        .click-target:active { transform: scale(0.95); }
+        .click-target:active { 
+            transform: scale(0.95); 
+            filter: drop-shadow(0 0 30px rgba(0, 240, 255, 0.8));
+        }
 
         /* The 3D Puck Container */
         #puck-container {
@@ -944,12 +949,12 @@
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Optimize pixel ratio
                 
-                // Bloom Pass (Lightweight settings)
+                // Bloom Pass (Enhanced settings)
                 const renderScene = new THREE.RenderPass(this.scene, this.camera);
-                const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
-                bloomPass.threshold = 0.1;
-                bloomPass.strength = 0.8;
-                bloomPass.radius = 0.5;
+                const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.3, 0.9);
+                bloomPass.threshold = 0.08;
+                bloomPass.strength = 1.2;
+                bloomPass.radius = 0.6;
                 
                 this.composer = new THREE.EffectComposer(this.renderer);
                 this.composer.addPass(renderScene);
@@ -1014,8 +1019,8 @@
             createPuck: function() {
                 const geo = new THREE.CylinderGeometry(1, 1, 0.3, 32);
                 const mat = new THREE.MeshStandardMaterial({ 
-                    color: 0x111111, roughness: 0.2, metalness: 0.9, 
-                    emissive: 0x00f0ff, emissiveIntensity: 0.5 
+                    color: 0x111111, roughness: 0.1, metalness: 0.95, 
+                    emissive: 0x00f0ff, emissiveIntensity: 0.7 
                 });
                 this.puck = new THREE.Mesh(geo, mat);
                 this.puck.position.y = 0;
