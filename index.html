@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CYBER HOCKEY: PRO LEAGUE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300;0,600;0,900;1,900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #030305;
+            --bg-panel: rgba(12, 18, 30, 0.75);
+            --primary: #00f0ff;
+            --primary-dim: rgba(0, 240, 255, 0.15);
+            --secondary: #7000ff;
+            --accent: #ff0055;
+            --success: #00ff9d;
+            --text-main: #ffffff;
+            --text-muted: #8b9bb4;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --font-display: 'Exo 2', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --ease-elastic: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+        
+        body {
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- BACKGROUND --- */
+        #bg-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        /* --- LAYOUT --- */
+        .app-container {
+            position: relative;
+            z-index: 10;
+            width: 95vw;
+            max-width: 1400px;
+            height: 90vh;
+            display: grid;
+            grid-template-columns: 350px 1fr 380px;
+            gap: 20px;
+            pointer-events: none; /* Let clicks pass through empty spaces */
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            pointer-events: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transition: transform 0.3s var(--ease-elastic), box-shadow 0.3s ease;
+        }
+
+        /* --- LEFT PANEL: STATS & PROGRESSION --- */
+        .stats-panel {
+            justify-content: space-between;
+            border-left: 2px solid var(--primary);
+        }
+
+        .profile-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 0 20px var(--primary-dim);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .level-badge {
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-main);
+        }
+
+        .progress-container {
+            margin-top: 15px;
+            background: rgba(255,255,255,0.05);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .stat-card:hover {
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.06);
+        }
+
+        .stat-val {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: block;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- CENTER PANEL: ARENA --- */
+        .arena-panel {
+            position: relative;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, rgba(0, 240, 255, 0.05) 0%, transparent 70%);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+        }
+
+        .score-display {
+            position: absolute;
+            top: 30px;
+            text-align: center;
+            z-index: 20;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .score-number {
+            font-family: var(--font-display);
+            font-size: 5rem;
+            font-weight: 900;
+            font-style: italic;
+            color: white;
+            text-shadow: 0 0 30px var(--primary-dim);
+            line-height: 1;
+        }
+
+        .click-target {
+            width: 280px;
+            height: 280px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.1s;
+            z-index: 10;
+        }
+
+        .click-target:active { transform: scale(0.95); }
+
+        /* The 3D Puck Container */
+        #puck-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .combo-hud {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .combo-hud.active { opacity: 1; }
+
+        .combo-meter {
+            width: 200px;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0 auto 5px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .combo-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            box-shadow: 0 0 15px var(--accent);
+            transition: width 0.1s linear;
+        }
+        .combo-text {
+            font-family: var(--font-display);
+            font-weight: 900;
+            color: var(--accent);
+            font-size: 1.2rem;
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        /* --- RIGHT PANEL: SHOP --- */
+        .shop-panel {
+            border-right: 2px solid var(--secondary);
+            overflow: hidden;
+        }
+
+        .shop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .shop-title {
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+
+        .shop-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-family: var(--font-body);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn.active {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+            box-shadow: 0 0 15px rgba(112, 0, 255, 0.4);
+        }
+
+        .shop-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .shop-list::-webkit-scrollbar { width: 4px; }
+        .shop-list::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 2px; }
+
+        .upgrade-card {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s var(--ease-elastic);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upgrade-card:hover {
+            transform: translateX(-5px);
+            background: rgba(255,255,255,0.05);
+            border-color: var(--text-muted);
+        }
+
+        .upgrade-card.disabled {
+            opacity: 0.4;
+            filter: grayscale(1);
+            cursor: not-allowed;
+            transform: none;
+        }
+        .upgrade-card.disabled:hover { border-color: var(--glass-border); }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-right: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .card-info { flex: 1; }
+        .card-name { font-weight: 700; font-size: 1rem; color: white; margin-bottom: 4px; }
+        .card-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.2; }
+        
+        .card-action {
+            text-align: right;
+            min-width: 80px;
+        }
+        .card-cost {
+            font-family: var(--font-display);
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.1rem;
+            display: block;
+        }
+        .card-lvl {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+            display: inline-block;
+        }
+
+        /* --- START SCREEN --- */
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(3, 3, 5, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+            transition: opacity 0.8s;
+        }
+
+        .main-title {
+            font-family: var(--font-display);
+            font-size: 5rem;
+            font-weight: 900;
+            font-style: italic;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #fff, var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            text-shadow: 0 10px 30px rgba(0, 240, 255, 0.3);
+            text-align: center;
+        }
+
+        .sub-title {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            letter-spacing: 2px;
+        }
+
+        .start-btn {
+            background: var(--primary);
+            color: #000;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 900;
+            padding: 18px 60px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 30px var(--primary-dim);
+            transition: all 0.3s var(--ease-elastic);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px var(--primary);
+            background: white;
+        }
+
+        .start-btn::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            transition: 0.5s;
+        }
+        .start-btn:hover::after { left: 100%; }
+
+        /* --- FX --- */
+        .floating-text {
+            position: absolute;
+            font-family: var(--font-display);
+            font-weight: 900;
+            font-size: 2rem;
+            color: white;
+            pointer-events: none;
+            animation: floatUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            z-index: 100;
+            text-shadow: 0 0 10px var(--primary);
+        }
+        .floating-text.crit {
+            color: var(--accent);
+            font-size: 3rem;
+            text-shadow: 0 0 20px var(--accent);
+            z-index: 101;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5) rotate(-10deg); opacity: 0; }
+            20% { transform: translateY(-20px) scale(1.2) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-120px) scale(1) rotate(10deg); opacity: 0; }
+        }
+
+        .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .toast {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(12, 18, 30, 0.9);
+            border: 1px solid var(--success);
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.5s var(--ease-elastic);
+            z-index: 200;
+            pointer-events: none;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast-icon { font-size: 1.5rem; }
+        .toast-content h4 { margin: 0; color: var(--success); font-family: var(--font-display); font-size: 0.9rem; text-transform: uppercase; }
+        .toast-content p { margin: 2px 0 0; color: white; font-size: 0.85rem; }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr 300px;
+                height: 100vh;
+                width: 100vw;
+                border-radius: 0;
+                padding: 10px;
+                gap: 10px;
+            }
+            .stats-panel { flex-direction: row; align-items: center; padding: 15px; border-left: none; border-bottom: 2px solid var(--primary); }
+            .profile-header { margin: 0 20px 0 0; display: flex; align-items: center; gap: 15px; text-align: left; }
+            .avatar { width: 50px; height: 50px; font-size: 1.2rem; margin: 0; }
+            .level-badge { font-size: 1.2rem; }
+            .progress-container { display: none; }
+            .stat-grid { display: none; } /* Hide detailed stats on mobile to save space */
+            .shop-panel { border-right: none; border-top: 2px solid var(--secondary); }
+            .score-number { font-size: 3.5rem; }
+            .click-target { width: 200px; height: 200px; }
+            .main-title { font-size: 3rem; }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="app-container">
+        <!-- Left: Stats -->
+        <div class="panel stats-panel">
+            <div class="profile-header">
+                <div class="avatar">🏒</div>
+                <div>
+                    <div class="level-badge" id="levelDisplay">ROOKIE</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Прогресс лиги</div>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="xpBar"></div>
+            </div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <span class="stat-val" id="powerDisplay" style="color: var(--primary)">1</span>
+                    <span class="stat-label">Сила Удара</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-val" id="autoDisplay" style="color: var(--secondary)">0</span>
+                    <span class="stat-label">Авто-Голы/сек</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-val" id="critDisplay" style="color: var(--accent)">5%</span>
+                    <span class="stat-label">Крит. Шанс</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-val" id="totalClicksDisplay">0</span>
+                    <span class="stat-label">Всего Ударов</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center: Arena -->
+        <div class="panel arena-panel">
+            <div class="score-display">
+                <div class="score-label">Счет Матча</div>
+                <div class="score-number" id="scoreDisplay">0</div>
+            </div>
+
+            <div class="click-target" id="puckBtn">
+                <div id="puck-container"></div>
+            </div>
+
+            <div class="combo-hud" id="comboHud">
+                <div class="combo-meter">
+                    <div class="combo-fill" id="comboFill"></div>
+                </div>
+                <div class="combo-text" id="comboText">COMBO x1.0</div>
+            </div>
+        </div>
+
+        <!-- Right: Shop -->
+        <div class="panel shop-panel">
+            <div class="shop-header">
+                <div class="shop-title">Магазин</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); cursor: pointer;" onclick="Audio.toggleMute()" id="muteBtn">🔊</div>
+            </div>
+            <div class="shop-tabs">
+                <button class="tab-btn active" onclick="Shop.filter('all')">Все</button>
+                <button class="tab-btn" onclick="Shop.filter('click')">Атака</button>
+                <button class="tab-btn" onclick="Shop.filter('auto')">Защита</button>
+            </div>
+            <div class="shop-list" id="shopList">
+                <!-- Items injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <div id="start-screen">
+        <div class="main-title">CYBER HOCKEY</div>
+        <div class="sub-title">PRO LEAGUE EDITION</div>
+        <button class="start-btn" id="startBtn">ВЫЙТИ НА ЛЕД</button>
+    </div>
+
+    <div id="toast" class="toast">
+        <div class="toast-icon">🏆</div>
+        <div class="toast-content">
+            <h4 id="toastTitle">ДОСТИЖЕНИЕ</h4>
+            <p id="toastDesc">Первый гол!</p>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * AUDIO ENGINE (Optimized Synth)
+         */
+        const Audio = {
+            ctx: null,
+            muted: false,
+            masterGain: null,
+            isPlaying: false,
+            
+            init: function() {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioContext();
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.gain.value = 0.25; // Master volume
+                this.masterGain.connect(this.ctx.destination);
+            },
+
+            toggleMute: function() {
+                this.muted = !this.muted;
+                if(this.masterGain) this.masterGain.gain.value = this.muted ? 0 : 0.25;
+                document.getElementById('muteBtn').innerText = this.muted ? '🔇' : '🔊';
+            },
+
+            startMusic: function() {
+                if (this.isPlaying || !this.ctx) return;
+                this.isPlaying = true;
+                this.playBassline();
+            },
+
+            playBassline: function() {
+                const notes = [65.41, 65.41, 77.78, 65.41, 58.27, 58.27, 77.78, 58.27];
+                let idx = 0;
+                const loop = () => {
+                    if(!this.isPlaying) return;
+                    this.playTone(notes[idx], this.ctx.currentTime, 0.2, 'sawtooth', 400);
+                    idx = (idx + 1) % notes.length;
+                    setTimeout(loop, 250);
+                };
+                loop();
+            },
+
+            playTone: function(freq, time, dur, type, filterFreq) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                
+                osc.type = type;
+                osc.frequency.value = freq;
+                filter.type = 'lowpass';
+                filter.frequency.value = filterFreq;
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                
+                gain.gain.setValueAtTime(0.5, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + dur);
+                
+                osc.start(time);
+                osc.stop(time + dur);
+            },
+
+            playHit: function(isCrit) {
+                if (this.muted || !this.ctx) return;
+                const t = this.ctx.currentTime;
+                // Noise
+                const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const nGain = this.ctx.createGain();
+                nGain.gain.setValueAtTime(isCrit ? 0.4 : 0.1, t);
+                nGain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                noise.connect(nGain);
+                nGain.connect(this.masterGain);
+                noise.start();
+                
+                // Tone
+                this.playTone(isCrit ? 150 : 800, t, 0.1, isCrit ? 'square' : 'sine', 1000);
+            },
+
+            playBuy: function() {
+                if (this.muted || !this.ctx) return;
+                const t = this.ctx.currentTime;
+                this.playTone(440, t, 0.1, 'triangle', 2000);
+                setTimeout(() => this.playTone(880, this.ctx.currentTime, 0.2, 'sine', 2000), 100);
+            }
+        };
+
+        /**
+         * GAME STATE & LOGIC
+         */
+        const Game = {
+            state: {
+                score: 0,
+                clickPower: 1,
+                autoPower: 0,
+                critChance: 0.05,
+                combo: 0,
+                level: 1,
+                xp: 0,
+                xpToNext: 100,
+                totalClicks: 0
+            },
+            items: [
+                { id: 'c1', name: 'Карбон Клюшка', type: 'click', baseCost: 25, power: 2, count: 0, icon: '🏒', desc: '+2 Сила' },
+                { id: 'c2', name: 'Нано Лезвия', type: 'click', baseCost: 100, power: 5, count: 0, icon: '⛸️', desc: '+5 Сила' },
+                { id: 'a1', name: 'Робот-Вратарь', type: 'auto', baseCost: 250, power: 3, count: 0, icon: '🤖', desc: '+3 Авто' },
+                { id: 'c3', name: 'Плазма Шайба', type: 'click', baseCost: 800, power: 15, count: 0, icon: '🥅', desc: '+15 Сила' },
+                { id: 'a2', name: 'Кибер-Тренер', type: 'auto', baseCost: 1500, power: 12, count: 0, icon: '🧠', desc: '+12 Авто' },
+                { id: 'c4', name: 'Перчатка Бога', type: 'click', baseCost: 5000, power: 50, count: 0, icon: '🧤', desc: '+50 Сила' },
+                { id: 'a3', name: 'Команда Киборгов', type: 'auto', baseCost: 12000, power: 60, count: 0, icon: '🛡️', desc: '+60 Авто' },
+                { id: 'a4', name: 'Стадион Будущего', type: 'auto', baseCost: 50000, power: 200, count: 0, icon: '🏟️', desc: '+200 Авто' }
+            ],
+            levels: ["ROOKIE", "AMATEUR", "PRO", "ELITE", "LEGEND", "CYBER GOD"],
+            
+            addScore: function(amount, isCrit) {
+                const final = isCrit ? amount * 2 : amount;
+                this.state.score += final;
+                this.state.totalClicks++;
+                
+                // Combo
+                this.state.combo = Math.min(this.state.combo + (isCrit ? 5 : 1), 100);
+                
+                // XP & Level
+                const xpGain = isCrit ? 2 : 1;
+                this.state.xp += xpGain;
+                if (this.state.xp >= this.state.xpToNext) {
+                    this.state.level++;
+                    this.state.xp = 0;
+                    this.state.xpToNext = Math.floor(this.state.xpToNext * 1.5);
+                    this.state.clickPower += 5; // Level up bonus
+                    UI.toast("УРОВЕНЬ ПОВЫШЕН!", `Теперь вы ${this.levels[Math.min(this.state.level-1, 5)]}`);
+                }
+
+                UI.updateAll();
+                return final;
+            },
+            
+            buy: function(idx) {
+                const item = this.items[idx];
+                const cost = Math.floor(item.baseCost * Math.pow(1.4, item.count));
+                if (this.state.score >= cost) {
+                    this.state.score -= cost;
+                    item.count++;
+                    if (item.type === 'click') this.state.clickPower += item.power;
+                    else this.state.autoPower += item.power;
+                    
+                    Audio.playBuy();
+                    UI.updateAll();
+                    Shop.render();
+                    ThreeD.pulse();
+                }
+            },
+            
+            resetCombo: function() {
+                this.state.combo = 0;
+                UI.updateCombo();
+            }
+        };
+
+        /**
+         * UI MANAGER
+         */
+        const UI = {
+            els: {
+                score: document.getElementById('scoreDisplay'),
+                power: document.getElementById('powerDisplay'),
+                auto: document.getElementById('autoDisplay'),
+                crit: document.getElementById('critDisplay'),
+                clicks: document.getElementById('totalClicksDisplay'),
+                level: document.getElementById('levelDisplay'),
+                xpBar: document.getElementById('xpBar'),
+                comboHud: document.getElementById('comboHud'),
+                comboFill: document.getElementById('comboFill'),
+                comboText: document.getElementById('comboText'),
+                startScreen: document.getElementById('start-screen'),
+                startBtn: document.getElementById('startBtn'),
+                toast: document.getElementById('toast'),
+                toastTitle: document.getElementById('toastTitle'),
+                toastDesc: document.getElementById('toastDesc')
+            },
+
+            fmt: (n) => n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'k' : Math.floor(n),
+
+            init: function() {
+                this.els.startBtn.onclick = () => {
+                    Audio.init();
+                    Audio.startMusic();
+                    this.els.startScreen.style.opacity = '0';
+                    setTimeout(() => this.els.startScreen.style.display = 'none', 800);
+                };
+                
+                // Combo Decay
+                setInterval(() => {
+                    if (Game.state.combo > 0) {
+                        Game.state.combo = Math.max(0, Game.state.combo - 1);
+                        this.updateCombo();
+                    }
+                }, 1000);
+            },
+
+            updateAll: function() {
+                this.els.score.innerText = this.fmt(Game.state.score);
+                this.els.power.innerText = this.fmt(Game.state.clickPower);
+                this.els.auto.innerText = this.fmt(Game.state.autoPower);
+                this.els.crit.innerText = (Game.state.critChance * 100).toFixed(0) + '%';
+                this.els.clicks.innerText = this.fmt(Game.state.totalClicks);
+                
+                const lvlName = Game.levels[Math.min(Game.state.level-1, 5)];
+                this.els.level.innerText = `LVL ${Game.state.level} ${lvlName}`;
+                
+                const xpPct = (Game.state.xp / Game.state.xpToNext) * 100;
+                this.els.xpBar.style.width = `${xpPct}%`;
+                
+                this.updateCombo();
+                Shop.checkAffordability();
+            },
+
+            updateCombo: function() {
+                const mult = 1 + (Game.state.combo * 0.02);
+                this.els.comboFill.style.width = `${Game.state.combo}%`;
+                this.els.comboText.innerText = `COMBO x${mult.toFixed(2)}`;
+                
+                if (Game.state.combo > 5) this.els.comboHud.classList.add('active');
+                else this.els.comboHud.classList.remove('active');
+                
+                // Color shift
+                if (Game.state.combo > 80) this.els.comboFill.style.background = '#ff0055';
+                else if (Game.state.combo > 50) this.els.comboFill.style.background = '#ffe600';
+                else this.els.comboFill.style.background = '#00f0ff';
+            },
+
+            spawnText: function(x, y, text, isCrit) {
+                const el = document.createElement('div');
+                el.className = `floating-text${isCrit ? ' crit' : ''}`;
+                el.innerText = text;
+                el.style.left = `${x + (Math.random()-0.5)*50}px`;
+                el.style.top = `${y - 50}px`;
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 800);
+            },
+
+            shake: function() {
+                document.body.classList.add('shake');
+                setTimeout(() => document.body.classList.remove('shake'), 300);
+            },
+            
+            toast: function(title, desc) {
+                this.els.toastTitle.innerText = title;
+                this.els.toastDesc.innerText = desc;
+                this.els.toast.classList.add('show');
+                setTimeout(() => this.els.toast.classList.remove('show'), 3000);
+            }
+        };
+
+        /**
+         * SHOP MANAGER
+         */
+        const Shop = {
+            filterType: 'all',
+            
+            filter: function(type) {
+                this.filterType = type;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                event.target.classList.add('active');
+                this.render();
+            },
+            
+            render: function() {
+                const list = document.getElementById('shopList');
+                list.innerHTML = '';
+                
+                Game.items.forEach((item, idx) => {
+                    if (this.filterType !== 'all' && item.type !== this.filterType) return;
+                    
+                    const cost = Math.floor(item.baseCost * Math.pow(1.4, item.count));
+                    const canBuy = Game.state.score >= cost;
+                    
+                    const div = document.createElement('div');
+                    div.className = `upgrade-card ${canBuy ? '' : 'disabled'}`;
+                    div.onclick = () => Game.buy(idx);
+                    div.dataset.cost = cost;
+                    
+                    div.innerHTML = `
+                        <div class="card-icon">${item.icon}</div>
+                        <div class="card-info">
+                            <div class="card-name">${item.name}</div>
+                            <div class="card-desc">${item.desc}</div>
+                        </div>
+                        <div class="card-action">
+                            <span class="card-cost">${UI.fmt(cost)}</span>
+                            <span class="card-lvl">LVL ${item.count}</span>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            },
+            
+            checkAffordability: function() {
+                const cards = document.querySelectorAll('.upgrade-card');
+                cards.forEach(card => {
+                    const cost = parseInt(card.dataset.cost);
+                    if (Game.state.score >= cost) card.classList.remove('disabled');
+                    else card.classList.add('disabled');
+                });
+            }
+        };
+
+        /**
+         * THREE.JS ENGINE (Optimized)
+         */
+        const ThreeD = {
+            scene: null, camera: null, renderer: null, composer: null,
+            puck: null, grid: null,
+            raycaster: new THREE.Raycaster(),
+            mouse: new THREE.Vector2(),
+            
+            init: function() {
+                const canvas = document.getElementById('bg-canvas');
+                
+                this.scene = new THREE.Scene();
+                this.scene.fog = new THREE.FogExp2(0x030305, 0.02);
+                
+                this.camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+                this.camera.position.set(0, 2, 5);
+                this.camera.lookAt(0, 0, 0);
+                
+                this.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false, powerPreference: "high-performance" });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Optimize pixel ratio
+                
+                // Bloom Pass (Lightweight settings)
+                const renderScene = new THREE.RenderPass(this.scene, this.camera);
+                const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.2, 0.4, 0.85);
+                bloomPass.threshold = 0.1;
+                bloomPass.strength = 0.8;
+                bloomPass.radius = 0.5;
+                
+                this.composer = new THREE.EffectComposer(this.renderer);
+                this.composer.addPass(renderScene);
+                this.composer.addPass(bloomPass);
+                
+                // Lights
+                this.scene.add(new THREE.AmbientLight(0x404040, 1.5));
+                const spot = new THREE.SpotLight(0x00f0ff, 2);
+                spot.position.set(5, 10, 5);
+                this.scene.add(spot);
+                const sec = new THREE.PointLight(0x7000ff, 1.5, 20);
+                sec.position.set(-5, 2, -5);
+                this.scene.add(sec);
+                
+                this.createEnv();
+                this.createPuck();
+                
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                    this.composer.setSize(window.innerWidth, window.innerHeight);
+                });
+                
+                const onInteract = (e) => {
+                    e.preventDefault();
+                    const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+                    const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+                    
+                    this.mouse.x = (x / window.innerWidth) * 2 - 1;
+                    this.mouse.y = -(y / window.innerHeight) * 2 + 1;
+                    
+                    this.raycaster.setFromCamera(this.mouse, this.camera);
+                    if (this.raycaster.intersectObject(this.puck).length > 0) {
+                        this.hit(x, y);
+                    }
+                };
+
+                window.addEventListener('mousedown', onInteract);
+                window.addEventListener('touchstart', onInteract, {passive: false});
+                
+                this.animate();
+            },
+            
+            createEnv: function() {
+                const gridGeo = new THREE.PlaneGeometry(100, 100, 20, 20);
+                const gridMat = new THREE.MeshBasicMaterial({ color: 0x7000ff, wireframe: true, transparent: true, opacity: 0.1 });
+                this.grid = new THREE.Mesh(gridGeo, gridMat);
+                this.grid.rotation.x = -Math.PI / 2;
+                this.grid.position.y = -2;
+                this.scene.add(this.grid);
+                
+                // Stars
+                const starGeo = new THREE.BufferGeometry();
+                const verts = [];
+                for(let i=0; i<1000; i++) verts.push((Math.random()-0.5)*200, (Math.random()-0.5)*100+50, (Math.random()-0.5)*200-50);
+                starGeo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+                const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.2, transparent: true }));
+                this.scene.add(stars);
+            },
+            
+            createPuck: function() {
+                const geo = new THREE.CylinderGeometry(1, 1, 0.3, 32);
+                const mat = new THREE.MeshStandardMaterial({ 
+                    color: 0x111111, roughness: 0.2, metalness: 0.9, 
+                    emissive: 0x00f0ff, emissiveIntensity: 0.5 
+                });
+                this.puck = new THREE.Mesh(geo, mat);
+                this.puck.position.y = 0;
+                this.scene.add(this.puck);
+                
+                // Ring
+                const ring = new THREE.Mesh(
+                    new THREE.TorusGeometry(1.1, 0.05, 16, 32),
+                    new THREE.MeshBasicMaterial({ color: 0x00f0ff })
+                );
+                ring.rotation.x = Math.PI/2;
+                this.puck.add(ring);
+            },
+            
+            hit: function(x, y) {
+                const mult = 1 + (Game.state.combo * 0.02);
+                const isCrit = Math.random() < Game.state.critChance;
+                const dmg = Math.floor(Game.state.clickPower * mult);
+                const final = Game.addScore(dmg, isCrit);
+                
+                Audio.playHit(isCrit);
+                UI.spawnText(x, y, `+${UI.fmt(final)}${isCrit ? '!' : ''}`, isCrit);
+                UI.shake();
+                this.pulse(isCrit);
+                this.explode(isCrit ? 0xff0055 : 0x00f0ff);
+                
+                clearTimeout(this.comboTimer);
+                this.comboTimer = setTimeout(() => Game.resetCombo(), 2000);
+            },
+            
+            pulse: function(isCrit) {
+                this.puck.material.emissive.setHex(isCrit ? 0xff0055 : 0x00f0ff);
+                this.puck.material.emissiveIntensity = 2.0;
+                this.puck.scale.set(1.1, 0.9, 1.1);
+                setTimeout(() => {
+                    this.puck.material.emissive.setHex(0x00f0ff);
+                    this.puck.material.emissiveIntensity = 0.5;
+                    this.puck.scale.set(1, 1, 1);
+                }, 100);
+            },
+            
+            explode: function(color) {
+                const count = 20;
+                const geo = new THREE.BufferGeometry();
+                const pos = [];
+                const vel = [];
+                for(let i=0; i<count; i++) {
+                    pos.push(this.puck.position.x, this.puck.position.y+0.15, this.puck.position.z);
+                    vel.push((Math.random()-0.5)*0.5, Math.random()*0.5, (Math.random()-0.5)*0.5);
+                }
+                geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+                const mat = new THREE.PointsMaterial({ color: color, size: 0.15, transparent: true });
+                const pts = new THREE.Points(geo, mat);
+                this.scene.add(pts);
+                
+                let frame = 0;
+                const anim = () => {
+                    frame++;
+                    const attr = pts.geometry.attributes.position;
+                    for(let i=0; i<count; i++) {
+                        attr.setXYZ(i, attr.getX(i)+vel[i*3], attr.getY(i)+vel[i*3+1], attr.getZ(i)+vel[i*3+2]);
+                    }
+                    attr.needsUpdate = true;
+                    pts.material.opacity -= 0.05;
+                    if(frame < 20) requestAnimationFrame(anim);
+                    else this.scene.remove(pts);
+                };
+                anim();
+            },
+            
+            animate: function() {
+                requestAnimationFrame(() => this.animate());
+                const t = Date.now() * 0.001;
+                this.puck.rotation.y += 0.01;
+                this.puck.position.y = Math.sin(t*2) * 0.05;
+                this.grid.position.z = (t*5) % 10;
+                this.composer.render();
+            }
+        };
+
+        // Auto Income Loop
+        setInterval(() => {
+            if (Game.state.autoPower > 0) {
+                Game.state.score += Game.state.autoPower / 10;
+                Game.state.xp += 0.1; // Passive XP
+                UI.updateAll();
+                if(Math.random() > 0.8) ThreeD.pulse();
+            }
+        }, 100);
+
+        window.onload = () => {
+            UI.init();
+            ThreeD.init();
+            Shop.render();
+            UI.updateAll();
+        };
+    </script>
+</body>
+</html>
+
