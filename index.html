@@ -681,21 +681,30 @@
             playHit: function(isCrit) {
                 if (this.muted || !this.ctx) return;
                 const t = this.ctx.currentTime;
-                // Noise
-                const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.1, this.ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
-                const noise = this.ctx.createBufferSource();
-                noise.buffer = buffer;
-                const nGain = this.ctx.createGain();
-                nGain.gain.setValueAtTime(isCrit ? 0.4 : 0.1, t);
-                nGain.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-                noise.connect(nGain);
-                nGain.connect(this.masterGain);
-                noise.start();
                 
-                // Tone
-                this.playTone(isCrit ? 150 : 800, t, 0.1, isCrit ? 'square' : 'sine', 1000);
+                // Create a moan-like sound using oscillators with changing frequencies
+                const oscillator = this.ctx.createOscillator();
+                const gainNode = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                
+                // Configure for a moan-like sound
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(isCrit ? 120 : 220, t); // Lower frequencies for moan
+                oscillator.frequency.exponentialRampToValueAtTime(isCrit ? 80 : 180, t + 0.3); // Frequency sweep down
+                
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(isCrit ? 800 : 1200, t);
+                filter.Q.setValueAtTime(2, t);
+                
+                gainNode.gain.setValueAtTime(isCrit ? 0.3 : 0.15, t);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+                
+                oscillator.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(this.masterGain);
+                
+                oscillator.start(t);
+                oscillator.stop(t + 0.4);
             },
 
             playBuy: function() {
